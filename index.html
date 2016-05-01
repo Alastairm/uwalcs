@@ -5,7 +5,7 @@
     <title>UWA LCS DL</title>
 
     <!-- JS -->
-    <script src="uwalcsdl.js"></script>
+    <script src="uwalcs.js"></script>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -25,34 +25,34 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="uwalcsdl.css">
+    <link rel="stylesheet" href="uwalcs.css">
 
 
 </head>
 
 <body>
+  <script type="text/javascript">
+      insertNavbar();
+      getUnitShortcuts();
+      var data = new Firebase('https://uwalcs.firebaseio.com/');
+  </script>
 
-    <!-- Navigation -->
-    <script type="text/javascript">
-        insertNavbar();
-    </script>
-    <!-- Unit Shortcuts from cookie -->
-    <script type="text/javascript">
-        getUnitShortcuts();
-    </script>
 
-    <!-- Page Content -->
-    <div class="container">
-
-        <div class="row">
-            <div class="col-sm-12 text-center">
-                <h1>Find Unit Lectures:</h1>
-                <form  onsubmit="return unitRedirect()" class="form-inline" id="find-unit-form">
-                  <div class="form-group">
-                    <label class="sr-only" for="unitCode">Unit to find</label>
-                    <div class="input-group">
-                      <input type="text" class="form-control" id="unitCode" nanme="unitCode" placeholder="UNIT1001">
-                    </div>
-                  </div>
-                <input type="button" id="findUnitForm" name="submit" onclick="unitRedirect()" value="Go To Unit" class="btn btn-primary"/>
-                </form>
+  <!-- Page Content -->
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <h1>Find Unit Lectures:</h1>
+        <form  onsubmit="return unitRedirect()" class="form-inline" id="find-unit-form">
+          <div class="form-group">
+            <label class="sr-only" for="unitCode">Unit to find</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="unitCode" nanme="unitCode" placeholder="UNIT1001">
+            </div>
+          </div>
+        <input type="button" id="findUnitForm" name="submit" onclick="unitRedirect()" value="Go To Unit" class="btn btn-primary"/>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
