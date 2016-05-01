@@ -1,0 +1,12 @@
+
+
+/* Navbar Height settings */
+.navbar-nav > li > a, .navbar-brand {
+  padding-top:8px !important;
+  padding-bottom:5px !important;
+  height: 36px; }
+.navbar {min-height:36px !important;}
+body {
+    padding-top: 48px;
+    /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+}
