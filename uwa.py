@@ -3,42 +3,27 @@
     following a given template, and generate a html file containing a list of
     all units that were found.
 """
-import urllib.request
+import urllib.request as request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 import re
 import os.path
 #pip3 install tqdm
 from tqdm import tqdm
-#pip3 install requests && pip3 install python-firebase
-from firebase import firebase
-#Firebase auth infor is in a sperate .gitignored files
-from auth import auth
 
 #URL to UWA's echo lecture repository
 BASE_URL = 'http://media.lcs.uwa.edu.au/echocontent/'
-#Firebase JSON database
-FB = firebase.FirebaseApplication('https://uwalcs.firebaseio.com/')
-FB.authentication = auth
 
-def get_hashes_from_dir(url: str):
-    """Fetches all links in a directory that are in the correct unit hash format
-    """
-    response = urllib.request.urlopen(url)
-    data = response.read()
-    page_text = data.decode('utf-8')
+# def url_from_date(datetime):
+#     return BASE_URL+datetime.strftime('%y%W/%w')
 
-    #A Very naive way to select the correct links, regex would be more robust.
-    links = page_text.split("<a href=\"")
-    links = links[6:]
-    links.reverse()
+def url_today():
+    today = datetime.now()
+    return BASE_URL+today.strftime(f"%y%W/{today.weekday()+1}")
 
-    hash_links = []
-    for link in links:
-        hash_links.append(link[0:36])
-    return hash_links
 
-def check_date(year=None: int, week=None: int, day=None: int):
+def check_date(year: int=None, week: int=None, day: int=None):
     """Checks year, week and day ints are within valid ranges.
     Args:
         year (int): Two digit year abbreviation, valid range: 15 to current year
@@ -58,6 +43,31 @@ def check_date(year=None: int, week=None: int, day=None: int):
         raise ValueError("Day argument out of range (valid:1-7)")
     return True
 
+
+def get_hashes_from_dir(url: str):
+    """Fetches all links in a directory that are in the correct unit hash format
+    """
+    response = request.urlopen(url)
+    data = response.read()
+    page_text = data.decode('utf-8')
+
+    #A Very     ive way to select the correct links, regex would be more robust.
+    links = page_text.split("<a href=\"")
+    links = links[6:]
+    links.reverse()
+
+    hash_links = []
+    for link in links:
+        hash_links.append(link[0:36])
+    return hash_links
+
+
+def get_todays_hashes():
+    URLToday = url_today()
+    return get_hashes_from_dir(URLToday)
+
+
+
 class UnitXML:
     """Class for holding the section.xml file and related info for a given unit
 
@@ -66,12 +76,14 @@ class UnitXML:
         tree (ET.Element): XML tree of unit's section.xml file
     """
 
-    sectionsURL = BASE_URL+'sections/'
-    fileName = '/section.xml'
+    url = BASE_URL
+    fileName = '/presentation.xml'
 
     def __init__(self, unitHash: str):
-        self.url = self.sectionsURL+unitHash+self.fileName
-        data = urllib.request.urlopen(self.url)
+    
+        self.url = self.url+unitHash+self.fileName
+        print(self.url)
+        data = request.urlopen(self.url)
         data = data.read()
         self.tree = ET.fromstring(data)
 
@@ -122,11 +134,11 @@ class LectureXML:
         Raises:
             ValueError: If input arguments are outside of the allowed ranges
         """
-        check_year_week_day(year, week, day)
+        check_date(year, week, day)
 
         dirPath = str(year) + str(week) +'/'+ str(day) +'/'+ lectureHash +'/'
         self.url = BASE_URL + dirPath
-        data = urllib.request.urlopen(self.url+'presentation.xml')
+        data = request.urlopen(self.url+'presentation.xml')
         data = data.read()
         self.tree = ET.fromstring(data)
 
@@ -179,7 +191,7 @@ def get_semester_units(year: int, semester: int):
 
     sem_units = []
     print("Finding units from 20%s:"%( year))
-    for i, unitHash in tqdm(enumerate(unitHashes),
+    for _, unitHash in tqdm(enumerate(unitHashes),
                             total=len(unitHashes),
                             unit="units"):
         xml = UnitXML(unitHash)
@@ -198,10 +210,6 @@ def add_semester_units(year: int, semester: int):
         year (int): two digit abbreviation of Year in which the units ran
         semester (int): Semester in which the units ran (e.g. '1' or '2')
     """
-    sem_units = get_semester_units(year, semester)
-    print("Adding units to database")
-    for unitInfo in tqdm(sem_units, unit="units"):
-        FB.put_async('/units', unitInfo[0], {'URL':unitInfo[1]})
 
 def get_days_lectures(year: int, week: int, day: int):
     """Fetches all units in a given semester and adds them to JSON database.
@@ -210,19 +218,3 @@ def get_days_lectures(year: int, week: int, day: int):
         week (int): Week of year of the lecture
         day (int): day of week lecture occured on
     """
-    lec_db = list(FB.get('/units', None).keys())
-    check_year_week_day(year, week, day)
-    print('fetching /%02d%02d/%01d'%(year, week, day))
-    lec_links = get_hashes_from_dir(f'{BASE_URL}{year}{week}/{day}')
-    for lec in lec_links:
-        try:
-            xml = LectureXML(year, week, day, lec)
-        except urllib.error.HTTPError:
-            continue
-        unitCode = xml.get_lecture_unit()
-        if unitCode in lec_db:
-            data = {}
-            data[URL] = xml.get_lecture_video_url()
-            data[time], data[date] = xml.get_lecture_time_date()
-            data[location] = xml.get_lecture_location()
-            FB.post_async('/units/'+unitCode, data, params={'print':'silent'})
