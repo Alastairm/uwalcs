@@ -23,25 +23,26 @@ def url_today():
     return BASE_URL+today.strftime(f"%y%W/{today.weekday()+1}")
 
 
-def check_date(year: int=None, week: int=None, day: int=None):
+def check_date(date: datetime=datetime.now()):
     """Checks year, week and day ints are within valid ranges.
     Args:
-        year (int): Two digit year abbreviation, valid range: 15 to current year
-        week (int): ISO week number, valid range: 1 to 53
-        day  (int): ISO weekday, valid range: 1 (Monday) to 7(Sunday)
+        date (datetime) the date to fetch lectures for.
     Returns:
-        bool: True if valid, False otherwise.
+        bool: Date if valid.
     Raises:
-        ValueError: If input arguments are outside of the allowed ranges
+        ValueError: If date given is outside of the allowed ranges
     """
-    current_year = str(datetime.now().year)[-2:]
+    current_year = datetime.now().year
+    year = date.year
     if year and (year < 15 or year > current_year):
         raise ValueError(f"Year argument out of range (valid:15-{current_year}")
+    week = date.year
     if week and (week < 1 or week > 53):
         raise ValueError("Week argument out of range (valid:1-53")
+    day = date.day
     if day and (day < 1 or day > 7):
         raise ValueError("Day argument out of range (valid:1-7)")
-    return True
+    return date
 
 
 def get_hashes_from_dir(url: str):
@@ -87,9 +88,11 @@ class UnitXML:
         data = data.read()
         self.tree = ET.fromstring(data)
 
+
     def get_year(self):
         year = self.tree.find('term').find('name')
         return year.text[2:]
+
 
     def get_sem(self):
         longName = self.tree.find('name')
@@ -100,13 +103,17 @@ class UnitXML:
             return None
         return semester[1][0]
 
+
     def get_unit_code(self):
         unitCode = self.tree.find('course').find('identifier')
         return unitCode.text
 
+
     def get_unit_url(self):
         unitURL = self.tree.find('portal').find('url')
         return unitURL.text
+
+
 
 class LectureXML:
     """ class for holding the presentation.xml and
@@ -121,7 +128,7 @@ class LectureXML:
 
     def __init__(self, year: int, week: int, day: int, lectureHash: str):
         """ Initialises lectureXML class by fetching presentation.xml from
-        BASE_URL/year+week/dday/lectureHash'
+        BASE_URL/year+week/day/lectureHash'
 
         Parameters:
             year (int): Two digit year abbreviation,
@@ -134,7 +141,7 @@ class LectureXML:
         Raises:
             ValueError: If input arguments are outside of the allowed ranges
         """
-        check_date(year, week, day)
+        check_date(datetime.strptime(f"{year}{week}/{day-1}", "%y%W/%w"))
 
         dirPath = str(year) + str(week) +'/'+ str(day) +'/'+ lectureHash +'/'
         self.url = BASE_URL + dirPath
@@ -142,13 +149,16 @@ class LectureXML:
         data = data.read()
         self.tree = ET.fromstring(data)
 
+
     def get_lecture_unit(self):
         unitName = self.tree.find('presentation-properties').find('name')
         unitCode = unitName.text[0:8]
         return unitCode
 
+
     def get_lecture_video_url(self):
         return self.url + 'audio-vga.m4v'
+
 
     def get_lecture_time_date(self):
         """ Returns:
@@ -167,6 +177,7 @@ class LectureXML:
             time = time[1:]
         return time, date
 
+
     def get_lecture_location(self):
         location = self.tree.find('presentation-properties').find('location')
         return location.text
@@ -180,7 +191,7 @@ def get_semester_units(year: int, semester: int):
         year (int): two digit abbreviation of Year in which the units ran
         semester (int): Semester in which the units ran (e.g. '1' or '2')
     """
-    check_date(year=year)
+    check_date(datetime.date(year=year))
     year = str(year)
     semester = str(semester)
 
@@ -204,12 +215,14 @@ def get_semester_units(year: int, semester: int):
             sem_units.append(unitInfo)
     return sem_units
 
+
 def add_semester_units(year: int, semester: int):
     """Fetches all units in a given semester and adds them to JSON database.
     Parameters:
         year (int): two digit abbreviation of Year in which the units ran
         semester (int): Semester in which the units ran (e.g. '1' or '2')
     """
+
 
 def get_days_lectures(year: int, week: int, day: int):
     """Fetches all units in a given semester and adds them to JSON database.
