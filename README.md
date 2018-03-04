@@ -1,7 +1,7 @@
 # UWA LCS
-A quicker way to view captured lecture videos
+A (soon to be) quicker way to view captured lecture videos
 
 ## To Do:
-* Update lectures to sem 2 2017
+* Update lectures to 2018
 * Store fetched lecture data in JSON
-* Convert site to ReactJS
+* use something fancy like angular or react
