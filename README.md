@@ -1,7 +1,2 @@
 # UWA LCS
-A (soon to be) quicker way to view captured lecture videos
-
-## To Do:
-* Update lectures to 2018
-* Store fetched lecture data in JSON
-* use something fancy like angular or react
+This project is now defunct as UWA Echo360 lectures are no longer publicly accessible.
